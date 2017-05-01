@@ -13,7 +13,7 @@ class PhotoModel: NSObject, Mappable, NSCoding {
 	
 	var id: Double = 0
 	var thumbnailUrl: String = ""
-	var thumbnail: UIImage = UIImage()
+	var thumbnail: UIImage? = nil
 	
 	// MARK: Mappable
 	
@@ -32,6 +32,10 @@ class PhotoModel: NSObject, Mappable, NSCoding {
 	required init(coder aDecoder: NSCoder) {
 		id = aDecoder.decodeDouble(forKey: "id")
 		
+		if let thumbnailUrl = aDecoder.decodeObject(forKey: "thumbnailUrl") as? String {
+			self.thumbnailUrl = thumbnailUrl
+		}
+		
 		if let thumbnailData = aDecoder.decodeObject(forKey: "thumbnailData") as? Data {
 			self.thumbnail = UIImage(data: thumbnailData)!
 		}
@@ -39,7 +43,10 @@ class PhotoModel: NSObject, Mappable, NSCoding {
 	
 	func encode(with aCoder: NSCoder) {
 		aCoder.encode(id, forKey: "id")
-		aCoder.encode(UIImagePNGRepresentation(thumbnail), forKey: "thumbnailData")
+		
+		if let thumbnail = self.thumbnail {
+			aCoder.encode(UIImagePNGRepresentation(thumbnail), forKey: "thumbnailData")
+		}
 	}
 	
 }

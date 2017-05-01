@@ -13,7 +13,7 @@ class UserModel: NSObject, Mappable, NSCoding {
 	
 	var id: Double = 0
 	var name: String = ""
-	var albums: [AlbumModel] = []
+	var albums: [AlbumModel]? = nil
 	
 	// MARK: Mappable
 	

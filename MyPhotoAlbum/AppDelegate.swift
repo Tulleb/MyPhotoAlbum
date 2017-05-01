@@ -37,21 +37,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	}
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-		loadUsers() { (succeed: Bool) in
-			if succeed {
-				print("Users loaded successfully")
-			} else {
-				print("Loading user request encountered an issue")
-			}
-			
-			if let userTableViewController = self.navigationController.topViewController as? UserTableViewController {
+		navigationController = application.windows[0].rootViewController as! UINavigationController
+		
+		guard let userTableViewController = self.navigationController.topViewController as? UserTableViewController else {
+			print("Error while looking for top view controller")
+			return false
+		}
+		
+		if users.count == 0 {
+			loadUsers() { (succeed: Bool) in
+				if succeed {
+					print("Users loaded successfully")
+				} else {
+					print("Loading user request encountered an issue")
+				}
+				
+				print("Loading user view from remote")
 				userTableViewController.users = self.users
 				userTableViewController.tableView.reloadData()
 			}
+		} else {
+			print("Loading user view from cache")
+			userTableViewController.users = self.users
+			userTableViewController.tableView.reloadData()
 		}
 		
-		navigationController = application.windows[0].rootViewController as! UINavigationController
-			
 		return true
 	}
 
@@ -99,6 +109,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			album.photos = photos
 			completionHandler(true)
 		}
+	}
+	
+	func save(albums: [AlbumModel], from user: UserModel) -> [UserModel] {
+		let usersBuffer = users
+		
+		for userBuffer in usersBuffer {
+			if userBuffer.id == user.id {
+				userBuffer.albums = albums
+				break
+			}
+		}
+		
+		users = usersBuffer
+		
+		return usersBuffer
+	}
+	
+	func save(photos: [PhotoModel], from album: AlbumModel) -> [AlbumModel]? {
+		var concernedUser: UserModel? = nil
+		let usersBuffer = users
+		
+		for userBuffer in usersBuffer {
+			if userBuffer.id == album.userId, let albumsBuffer = userBuffer.albums {
+				for albumBuffer in albumsBuffer {
+					if albumBuffer.userId == userBuffer.id && albumBuffer.id == album.id {
+						albumBuffer.photos = photos
+						concernedUser = userBuffer
+						break
+					}
+				}
+			}
+		}
+		
+		users = usersBuffer
+		
+		return concernedUser?.albums
 	}
 	
 }
